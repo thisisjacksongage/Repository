@@ -39,7 +39,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build MoneyTrack
-        run: pnpm --filter @workspace/moneytrack build
+  run: pnpm --filter @workspace/moneytrack build
+  env:
+    PORT: 5173
+        
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
