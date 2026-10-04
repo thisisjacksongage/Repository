@@ -42,7 +42,7 @@ jobs:
         run: pnpm --filter @workspace/moneytrack build
         env:
           PORT: 5173
-
+          BASE_PATH: /${{ github.event.repository.name }}/
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
