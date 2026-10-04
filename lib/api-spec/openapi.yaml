@@ -3,13 +3,19 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: MoneyTrack personal savings and resale tracking API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: dashboard
+    description: Summary and recent activity
+  - name: goals
+    description: Savings goals and contributions
+  - name: items
+    description: Resale inventory and sales
 paths:
   /healthz:
     get:
@@ -24,6 +30,254 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard totals and recent activity
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /backup:
+    get:
+      operationId: getBackup
+      tags: [dashboard]
+      summary: Export the signed-in user's MoneyTrack data
+      responses:
+        "200":
+          description: MoneyTrack backup
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Backup"
+  /backup/restore:
+    post:
+      operationId: restoreBackup
+      tags: [dashboard]
+      summary: Replace the signed-in user's data from a backup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BackupRestoreInput"
+      responses:
+        "200":
+          description: Restored record counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackupRestoreResult"
+        "400":
+          description: Invalid backup data
+  /goals:
+    get:
+      operationId: getGoals
+      tags: [goals]
+      summary: List savings goals
+      responses:
+        "200":
+          description: Savings goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Goal"
+    post:
+      operationId: createGoal
+      tags: [goals]
+      summary: Create a savings goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoalInput"
+      responses:
+        "201":
+          description: Created savings goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+  /goals/{goalId}:
+    parameters:
+      - name: goalId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateGoal
+      tags: [goals]
+      summary: Update a savings goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoalUpdate"
+      responses:
+        "200":
+          description: Updated savings goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+        "404":
+          description: Goal not found
+    delete:
+      operationId: deleteGoal
+      tags: [goals]
+      summary: Delete a savings goal and its contribution history
+      responses:
+        "204":
+          description: Goal deleted
+        "404":
+          description: Goal not found
+  /goals/{goalId}/contributions:
+    parameters:
+      - name: goalId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getGoalContributions
+      tags: [goals]
+      summary: List contributions to a savings goal
+      responses:
+        "200":
+          description: Goal contributions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contribution"
+    post:
+      operationId: createGoalContribution
+      tags: [goals]
+      summary: Add money to a savings goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContributionInput"
+      responses:
+        "201":
+          description: Added contribution
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contribution"
+        "404":
+          description: Goal not found
+  /contributions/{contributionId}:
+    parameters:
+      - name: contributionId
+        in: path
+        required: true
+        schema:
+          type: string
+    delete:
+      operationId: deleteContribution
+      tags: [goals]
+      summary: Delete a contribution
+      responses:
+        "204":
+          description: Contribution deleted
+        "404":
+          description: Contribution not found
+  /items:
+    get:
+      operationId: getItems
+      tags: [items]
+      summary: List and filter resale items
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, inventory, listed, sold, returned]
+        - name: platform
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Resale items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResaleItem"
+    post:
+      operationId: createItem
+      tags: [items]
+      summary: Add a resale item or record a completed sale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemInput"
+      responses:
+        "201":
+          description: Created resale item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResaleItem"
+  /items/{itemId}:
+    parameters:
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateItem
+      tags: [items]
+      summary: Update inventory or sale details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemUpdate"
+      responses:
+        "200":
+          description: Updated resale item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResaleItem"
+        "404":
+          description: Item not found
+    delete:
+      operationId: deleteItem
+      tags: [items]
+      summary: Delete a resale item
+      responses:
+        "204":
+          description: Item deleted
+        "404":
+          description: Item not found
 components:
   schemas:
     HealthStatus:
@@ -33,4 +287,242 @@ components:
           type: string
       required:
         - status
+    Goal:
+      type: object
+      required: [id, name, targetAmount, savedAmount, targetDate, color, createdAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        targetAmount: { type: number }
+        savedAmount: { type: number }
+        targetDate: { type: ["string", "null"] }
+        color: { type: string }
+        createdAt: { type: string, format: date-time }
+    GoalInput:
+      type: object
+      required: [name, targetAmount]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        targetAmount: { type: number, exclusiveMinimum: 0 }
+        targetDate: { type: ["string", "null"] }
+        color: { type: string, maxLength: 30 }
+    GoalUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        targetAmount: { type: number, exclusiveMinimum: 0 }
+        targetDate: { type: ["string", "null"] }
+        color: { type: string, maxLength: 30 }
+    Contribution:
+      type: object
+      required: [id, goalId, amount, date, note, createdAt]
+      properties:
+        id: { type: string }
+        goalId: { type: string }
+        amount: { type: number }
+        date: { type: string }
+        note: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    ContributionInput:
+      type: object
+      required: [amount, date]
+      properties:
+        amount: { type: number, exclusiveMinimum: 0 }
+        date: { type: string }
+        note: { type: ["string", "null"], maxLength: 250 }
+    ResaleItem:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - brand
+        - size
+        - status
+        - purchasePrice
+        - purchaseDate
+        - listingPrice
+        - soldPrice
+        - platform
+        - platformFee
+        - paymentFee
+        - shippingCost
+        - otherCosts
+        - soldDate
+        - notes
+        - netProfit
+        - profitMargin
+        - createdAt
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: ["string", "null"] }
+        brand: { type: ["string", "null"] }
+        size: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [inventory, listed, sold, returned]
+        purchasePrice: { type: number }
+        purchaseDate: { type: string }
+        listingPrice: { type: ["number", "null"] }
+        soldPrice: { type: ["number", "null"] }
+        platform: { type: ["string", "null"] }
+        platformFee: { type: ["number", "null"] }
+        paymentFee: { type: ["number", "null"] }
+        shippingCost: { type: ["number", "null"] }
+        otherCosts: { type: ["number", "null"] }
+        soldDate: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+        netProfit: { type: ["number", "null"] }
+        profitMargin: { type: ["number", "null"] }
+        createdAt: { type: string, format: date-time }
+    ItemInput:
+      type: object
+      required: [name, purchasePrice, purchaseDate]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 160 }
+        category: { type: ["string", "null"], maxLength: 80 }
+        brand: { type: ["string", "null"], maxLength: 100 }
+        size: { type: ["string", "null"], maxLength: 40 }
+        status:
+          type: string
+          enum: [inventory, listed, sold, returned]
+        purchasePrice: { type: number, minimum: 0 }
+        purchaseDate: { type: string }
+        listingPrice: { type: ["number", "null"], minimum: 0 }
+        soldPrice: { type: ["number", "null"], minimum: 0 }
+        platform: { type: ["string", "null"], maxLength: 80 }
+        platformFee: { type: ["number", "null"], minimum: 0 }
+        paymentFee: { type: ["number", "null"], minimum: 0 }
+        shippingCost: { type: ["number", "null"], minimum: 0 }
+        otherCosts: { type: ["number", "null"], minimum: 0 }
+        soldDate: { type: ["string", "null"] }
+        notes: { type: ["string", "null"], maxLength: 2000 }
+    ItemUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 160 }
+        category: { type: ["string", "null"], maxLength: 80 }
+        brand: { type: ["string", "null"], maxLength: 100 }
+        size: { type: ["string", "null"], maxLength: 40 }
+        status:
+          type: string
+          enum: [inventory, listed, sold, returned]
+        purchasePrice: { type: number, minimum: 0 }
+        purchaseDate: { type: string }
+        listingPrice: { type: ["number", "null"], minimum: 0 }
+        soldPrice: { type: ["number", "null"], minimum: 0 }
+        platform: { type: ["string", "null"], maxLength: 80 }
+        platformFee: { type: ["number", "null"], minimum: 0 }
+        paymentFee: { type: ["number", "null"], minimum: 0 }
+        shippingCost: { type: ["number", "null"], minimum: 0 }
+        otherCosts: { type: ["number", "null"], minimum: 0 }
+        soldDate: { type: ["string", "null"] }
+        notes: { type: ["string", "null"], maxLength: 2000 }
+    Dashboard:
+      type: object
+      required:
+        - totalSaved
+        - savingsTarget
+        - goalCount
+        - resaleProfit
+        - monthlyProfit
+        - activeListings
+        - itemsSold
+        - monthly
+        - recentActivity
+      properties:
+        totalSaved: { type: number }
+        savingsTarget: { type: number }
+        goalCount: { type: integer }
+        resaleProfit: { type: number }
+        monthlyProfit: { type: number }
+        activeListings: { type: integer }
+        itemsSold: { type: integer }
+        monthly:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthlyTotal"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/Activity"
+    MonthlyTotal:
+      type: object
+      required: [month, label, sales, profit]
+      properties:
+        month: { type: string }
+        label: { type: string }
+        sales: { type: number }
+        profit: { type: number }
+    Activity:
+      type: object
+      required: [id, type, title, subtitle, amount, date]
+      properties:
+        id: { type: string }
+        type:
+          type: string
+          enum: [goal, contribution, item, sale]
+        title: { type: string }
+        subtitle: { type: string }
+        amount: { type: number }
+        date: { type: string, format: date-time }
+    Backup:
+      type: object
+      required: [formatVersion, exportedAt, goals, contributions, items]
+      properties:
+        formatVersion: { type: integer }
+        exportedAt: { type: string, format: date-time }
+        goals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Goal"
+        contributions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contribution"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResaleItem"
+    BackupGoalInput:
+      type: object
+      required: [sourceId, name, targetAmount]
+      properties:
+        sourceId: { type: string, minLength: 1 }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        targetAmount: { type: number, exclusiveMinimum: 0 }
+        targetDate: { type: ["string", "null"] }
+        color: { type: string, maxLength: 30 }
+    BackupContributionInput:
+      type: object
+      required: [sourceGoalId, amount, date]
+      properties:
+        sourceGoalId: { type: string, minLength: 1 }
+        amount: { type: number, exclusiveMinimum: 0 }
+        date: { type: string }
+        note: { type: ["string", "null"], maxLength: 250 }
+    BackupRestoreInput:
+      type: object
+      required: [goals, contributions, items]
+      properties:
+        goals:
+          type: array
+          items:
+            $ref: "#/components/schemas/BackupGoalInput"
+        contributions:
+          type: array
+          items:
+            $ref: "#/components/schemas/BackupContributionInput"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemInput"
+    BackupRestoreResult:
+      type: object
+      required: [goalsImported, contributionsImported, itemsImported]
+      properties:
+        goalsImported: { type: integer }
+        contributionsImported: { type: integer }
+        itemsImported: { type: integer }
 

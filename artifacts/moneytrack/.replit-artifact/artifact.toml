@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "MoneyTrack"
+description = "A personal finance web app for tracking savings goals and resale inventory, sales, costs, and net profit across Depop, eBay, and other marketplaces."
+version = "1.0.0"
+id = "artifacts/moneytrack"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23520
+
+[services.development]
+run = "pnpm --filter @workspace/moneytrack run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/moneytrack", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/moneytrack/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23520"
+BASE_PATH = "/"
