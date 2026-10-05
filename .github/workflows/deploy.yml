@@ -43,6 +43,7 @@ jobs:
         env:
           PORT: 5173
           BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
